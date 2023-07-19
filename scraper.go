@@ -27,14 +27,8 @@ type Spider struct {
 	Body        string
 }
 
-// "https://richmond.com/search/?nsa=eedition&app=editorial&d1=2023-07-17&d2=2023-07-18&s=start_time&sd=asc&l=100&t=article&nfl=ap"
-// "https://richmond.com/news/local/weather/how-did-the-james-river-rise-so-fast-our-chief-meteorologist-explains/article_63a94ada-24e1-11ee-973f-6fc456f72867.html#tracking-source=home-top-story",
-// const BASE_URL = "https://richmond.com"
-// const ARTICLE_BODY = "section#main-page-container"
-// const ARTICLE_TITLE = "h1.headline span"
-// const ARTICLE_TEXT = ".lee-article-text"
-// const RESULTS_CONTAINER = "div#results-col"
-// const RESULTS_LINK = "h3.tnt-headline a"
+const REQUEST_TIMEOUT = 120
+
 
 func loadEnv() {
 	err := godotenv.Load(".env")
@@ -43,7 +37,7 @@ func loadEnv() {
 	}
 }
 
-func initSpider() *Spider {
+func initSpider(url string) *Spider {
 	spider := Spider{
 		"news crawler",
 		make([]Article, 0),
@@ -56,8 +50,17 @@ func initSpider() *Spider {
 	return &spider
 }
 
-func (s Spider) Test() int {
-	return 0
+func (s Spider) Clone(name string, url string) *Spider {
+	spider := Spider {
+		name,
+		make([]Article, 0),
+		s.C.Clone(),
+		1,
+		url,
+		"",
+		"",
+	}
+	return &spider
 }
 
 func main() {
@@ -76,7 +79,8 @@ func main() {
 	RESULTS_CONTAINER := os.Getenv("RESULTS_CONTAINER")
 	RESULTS_LINK := os.Getenv("RESULTS_LINK")
 
-	spider := initSpider()
+	spider := initSpider("news crawler")
+
 
 	spider.C.SetRequestTimeout(120 * time.Second)
 
@@ -87,10 +91,6 @@ func main() {
 	})
 
 	spider.C.OnHTML(RESULTS_CONTAINER, func(e *colly.HTMLElement) {
-
-		// title := e.ChildText(ARTICLE_TITLE)
-		// fmt.Println("article title: ", title)
-		// data := ""
 
 		clone := spider.C.Clone()
 
@@ -146,20 +146,6 @@ func main() {
 			clone.Visit(article)
 
 		})
-
-		// f, err := os.Create("article1.txt")
-
-		// if err != nil {
-		// 	panic("failed to write article")
-		// }
-
-		// defer f.Close()
-
-		// _, err = f.WriteString(data)
-
-		// if err != nil {
-		// 	panic("failed to write string data to article.txt")
-		// }
 
 	})
 
