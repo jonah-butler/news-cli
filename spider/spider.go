@@ -1,8 +1,14 @@
 package spider
 
 import (
+	"fmt"
+	"strconv"
+	"time"
+
 	"github.com/gocolly/colly"
 )
+
+const REQUEST_TIMEOUT = 120 * time.Second
 
 type Article struct {
 	Title string
@@ -11,28 +17,126 @@ type Article struct {
 }
 
 type Spider struct {
-	Name        string
-	Data        []Article
-	C           *colly.Collector
-	Page        int
-	ActiveUrl   string
-	PreviousUrl string
-	Body        string
+	Name      string
+	ActiveUrl string
+	Data      []Article
+	C         *colly.Collector
+	Html      Elements
+	Search    SearchResults
+}
+
+type Elements struct {
+	BaseUrl          string
+	ArticleBody      string
+	ArticleTitle     string
+	ArticleText      string
+	ResultsContainer string
+	ResultsLink      string
+}
+
+type SearchResults struct {
+	Url       string
+	DateStart string
+	DateEnd   string
+	Results   []string
+	Limit     int
 }
 
 func (s Spider) Clone(name string, url string) *Spider {
-	spider := Spider {
+	spider := Spider{
 		name,
+		"",
 		make([]Article, 0),
-		colly.NewCollector(),
-		1,
-		url,
-		"",
-		"",
+		s.C.Clone(),
+		s.Html,
+		s.Search,
 	}
 	return &spider
 }
 
-func (s Spider) GetArticle() {
+/**
+* appends base url and relative article link
+* to form full path, usable by spider to scrape
+* article contents
+**/
+func (s Spider) BuildAndStoreResultsLink(relativeUrl string) {
+	s.Search.Results = append(s.Search.Results, s.Html.BaseUrl+relativeUrl)
+}
 
+/**
+* SETS UP REQUEST FOR A PARTICULAR ARTICLE AND BUILDS ARTICLE
+* within a given article endpoint
+* - store article url
+* - store article title
+* - loop through article text paragraphs and build article body
+**/
+func (s Spider) GetArticle(endpoint string) {
+	s.ActiveUrl = endpoint
+	s.C.SetRequestTimeout(REQUEST_TIMEOUT)
+
+	s.C.OnRequest(func(r *colly.Request) {
+		fmt.Println("visiting endpoint: ", endpoint)
+	})
+
+	// GRAB NECESSARY ARTICLE FILEDS ONCE HTML IS LOADED
+	s.C.OnHTML(s.Html.ArticleBody, func(e1 *colly.HTMLElement) {
+
+		article := Article{}
+
+		article.Url = endpoint
+		article.Title = e1.ChildText(s.Html.ArticleTitle)
+
+		if article.Title == "" {
+			article.Title = strconv.FormatInt(time.Now().UTC().UnixMilli(), 1000000000000)
+		}
+
+		e1.ForEach(s.Html.ArticleText, func(i int, e2 *colly.HTMLElement) {
+
+			article.Body += e2.Text
+			article.Body += "\n"
+
+		})
+
+	})
+
+	s.C.OnError(func(r *colly.Response, e error) {
+		fmt.Println("COLLY ERROR - endpoint: ", endpoint, "\nERROR: ", e)
+	})
+
+	// release the spider
+	s.C.Visit(s.ActiveUrl)
+}
+
+func (s Spider) GetArticleLinks() {
+	s.C.SetRequestTimeout(REQUEST_TIMEOUT)
+
+	s.C.OnRequest(func(r *colly.Request) {
+		fmt.Println("scraping results page: ", s.Search.Url)
+	})
+
+	s.C.OnHTML(s.Html.ResultsContainer, func(e1 *colly.HTMLElement) {
+
+		// new search results - so clear old search result links
+		s.ClearStoredArticleLinks()
+
+		e1.ForEach(s.Html.ResultsContainer, func(_ int, e2 *colly.HTMLElement) {
+
+			relativeUrl := e2.Attr("href")
+			s.BuildAndStoreResultsLink(relativeUrl)
+
+		})
+
+	})
+
+	s.C.OnError(func(r *colly.Response, e error) {
+		fmt.Println("COLLY ERROR - endpoint: ", s.Search.Url, "\nERROR: ", e)
+	})
+
+	s.C.Visit(s.Search.Url)
+}
+
+func (s Spider) ClearStoredArticleLinks() {
+	if len(s.Search.Results) != 0 {
+		s.Search.Results = []string{}
+	}
 }

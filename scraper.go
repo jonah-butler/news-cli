@@ -11,6 +11,8 @@ import (
 	"github.com/joho/godotenv"
 )
 
+// https://richmond.com/search/?nsa=eedition&app=editorial&d1=2023-07-17&d2=2023-07-18&s=start_time&sd=asc&l=25&t=article&nfl=ap",
+
 type Article struct {
 	Title string
 	Body  string
@@ -18,69 +20,115 @@ type Article struct {
 }
 
 type Spider struct {
-	Name        string
-	Data        []Article
-	C           *colly.Collector
-	Page        int
-	ActiveUrl   string
+	// name of crawler
+	Name string
+	// stores scraped article data
+	Data []Article
+	// the spider isntance - can be cloned
+	C *colly.Collector
+	// current page if crawling a results page
+	Page int
+	// limit results for results page - query param
+	// also used in results offset if more than one
+	// page of results exists
+	Limit int
+	// active url
+	ActiveUrl string
+	// previously visited url
 	PreviousUrl string
-	Body        string
+	// temp storage for article body
+	Body string
+	// all required html elements for
+	// navigating result and single article pages
+	Html Elements
+}
+
+type Elements struct {
+	// base url for navigation
+	BaseUrl string
+	// article body container
+	ArticleBody string
+	// article title inside ArticleBody
+	ArticleTitle string
+	// article text inside ArticleBody
+	ArticleText string
+	// search results container
+	ResultsContainer string
+	// link inside results container
+	ResultsLink string
 }
 
 const REQUEST_TIMEOUT = 120
 
-
-func loadEnv() {
+func LoadEnv() {
 	err := godotenv.Load(".env")
 	if err != nil {
 		log.Fatalf("failed to load env file - can't run scraper without html declarations")
 	}
 }
 
-func initSpider(url string) *Spider {
+func initSpider(url string, elements Elements) *Spider {
 	spider := Spider{
 		"news crawler",
 		make([]Article, 0),
 		colly.NewCollector(),
 		1,
-		"https://richmond.com/search/?nsa=eedition&app=editorial&d1=2023-07-17&d2=2023-07-18&s=start_time&sd=asc&l=25&t=article&nfl=ap",
+		20,
+		url,
 		"",
 		"",
+		elements,
 	}
 	return &spider
 }
 
 func (s Spider) Clone(name string, url string) *Spider {
-	spider := Spider {
+	spider := Spider{
 		name,
 		make([]Article, 0),
 		s.C.Clone(),
-		1,
+		s.Page,
+		s.Limit,
 		url,
 		"",
 		"",
+		s.Html,
 	}
 	return &spider
 }
 
 func main() {
 
-	loadEnv()
+	LoadEnv()
 
 	// links on search page are relative, so need base URL
+	// to do - delete this
 	BASE_URL := os.Getenv("BASE_URL")
 
 	// all html tags needed to get related article info
+	// to do - delete these
 	ARTICLE_BODY := os.Getenv("ARTICLE_BODY")
 	ARTICLE_TITLE := os.Getenv("ARTICLE_TITLE")
 	ARTICLE_TEXT := os.Getenv("ARTICLE_TEXT")
 
 	// all html tags needed to get all related search data
+	// to do - delete these
 	RESULTS_CONTAINER := os.Getenv("RESULTS_CONTAINER")
 	RESULTS_LINK := os.Getenv("RESULTS_LINK")
 
-	spider := initSpider("news crawler")
+	htmlElements := Elements{
+		// links on search page are relative, so need base URL
+		os.Getenv("BASE_URL"),
+		// all html tags needed to get related article info
+		os.Getenv("ARTICLE_BODY"),
+		os.Getenv("ARTICLE_TITLE"),
+		os.Getenv("ARTICLE_TEXT"),
+		// all html tags needed to get all related search data
+		os.Getenv("RESULTS_CONTAINER"),
+		os.Getenv("RESULTS_LINK"),
+	}
 
+	spider := initSpider("news crawler", htmlElements)
 
 	spider.C.SetRequestTimeout(120 * time.Second)
 
