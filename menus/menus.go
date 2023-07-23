@@ -23,7 +23,7 @@ func InitializePrompts() {
 	}
 
 	mainMenu.MenuOptions[i].Action()
-
+	
 }
 
 

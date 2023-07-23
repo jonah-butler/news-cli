@@ -34,11 +34,16 @@ type Elements struct {
 	ResultsLink      string
 }
 
+type Result struct {
+	Title string
+	Url string
+}
+
 type SearchResults struct {
 	Url       string
 	DateStart string
 	DateEnd   string
-	Results   []string
+	Results   []Result
 	Limit     int
 }
 
@@ -75,8 +80,12 @@ func (s Spider) Clone(name string, url string) *Spider {
 * to form full path, usable by spider to scrape
 * article contents
 **/
-func (s Spider) BuildAndStoreResultsLink(relativeUrl string) {
-	s.Search.Results = append(s.Search.Results, s.Html.BaseUrl+relativeUrl)
+func (s *Spider) BuildAndStoreResultsLink(relativeUrl string, title string) {
+	result := Result {
+		title,
+		s.Html.BaseUrl + relativeUrl,
+	}
+	s.Search.Results = append(s.Search.Results, result)
 }
 
 /**
@@ -86,7 +95,7 @@ func (s Spider) BuildAndStoreResultsLink(relativeUrl string) {
 * - store article title
 * - loop through article text paragraphs and build article body
 **/
-func (s Spider) GetArticle(endpoint string) {
+func (s *Spider) GetArticle(endpoint string) {
 	s.ActiveUrl = endpoint
 	s.C.SetRequestTimeout(REQUEST_TIMEOUT)
 
@@ -103,7 +112,7 @@ func (s Spider) GetArticle(endpoint string) {
 		article.Title = e1.ChildText(s.Html.ArticleTitle)
 
 		if article.Title == "" {
-			article.Title = strconv.FormatInt(time.Now().UTC().UnixMilli(), 1000000000000)
+			article.Title = strconv.FormatInt(time.Now().UTC().UnixMilli(), 10)
 		}
 
 		article.Body += "\n\n"
@@ -127,7 +136,7 @@ func (s Spider) GetArticle(endpoint string) {
 	s.C.Visit(s.ActiveUrl)
 }
 
-func (s Spider) GetArticleLinks() {
+func (s *Spider) GetArticleLinks(endpoint string) {
 	s.C.SetRequestTimeout(REQUEST_TIMEOUT)
 
 	s.C.OnRequest(func(r *colly.Request) {
@@ -139,12 +148,16 @@ func (s Spider) GetArticleLinks() {
 		// new search results - so clear old search result links
 		s.ClearStoredArticleLinks()
 
-		e1.ForEach(s.Html.ResultsContainer, func(_ int, e2 *colly.HTMLElement) {
+		e1.ForEach(s.Html.ResultsLink, func(_ int, e2 *colly.HTMLElement) {
 
 			relativeUrl := e2.Attr("href")
-			s.BuildAndStoreResultsLink(relativeUrl)
+			title := e2.Attr("aria-label")
+			if title != "" {
+				s.BuildAndStoreResultsLink(relativeUrl, title)
+			}
 
 		})
+
 
 	})
 
@@ -152,11 +165,11 @@ func (s Spider) GetArticleLinks() {
 		fmt.Println("COLLY ERROR - endpoint: ", s.Search.Url, "\nERROR: ", e)
 	})
 
-	s.C.Visit(s.Search.Url)
+	s.C.Visit(endpoint)
 }
 
 func (s Spider) ClearStoredArticleLinks() {
 	if len(s.Search.Results) != 0 {
-		s.Search.Results = []string{}
+		s.Search.Results = []Result{}
 	}
 }
