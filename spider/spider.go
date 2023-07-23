@@ -42,6 +42,22 @@ type SearchResults struct {
 	Limit     int
 }
 
+var (
+	Crawler *Spider
+)
+
+func InitSpider(name string, elements Elements) {
+	spider := Spider {
+		name,
+		"",
+		make([]Article, 0),
+		colly.NewCollector(),
+		elements,
+		SearchResults{},
+	}
+	Crawler = &spider
+}
+
 func (s Spider) Clone(name string, url string) *Spider {
 	spider := Spider{
 		name,
@@ -90,12 +106,16 @@ func (s Spider) GetArticle(endpoint string) {
 			article.Title = strconv.FormatInt(time.Now().UTC().UnixMilli(), 1000000000000)
 		}
 
+		article.Body += "\n\n"
+
 		e1.ForEach(s.Html.ArticleText, func(i int, e2 *colly.HTMLElement) {
 
 			article.Body += e2.Text
-			article.Body += "\n"
+			article.Body += "\n\n"
 
 		})
+
+		fmt.Println(article.Body)
 
 	})
 
