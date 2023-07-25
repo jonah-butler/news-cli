@@ -1,11 +1,11 @@
 package prompt
 
 type MenuLevel struct {
-	Prompt string
+	Prompt      string
 	MenuOptions []MenuOption
 }
 
 type MenuOption struct {
-	Text string
+	Text   string
 	Action func()
 }

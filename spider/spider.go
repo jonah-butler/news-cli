@@ -9,6 +9,7 @@ import (
 )
 
 const REQUEST_TIMEOUT = 120 * time.Second
+const DUMMY_URL = "https://richmond.com/search/?nsa=eedition&app=editorial&d1=2023-07-17&d2=2023-07-18&s=start_time&sd=asc&l=25&t=article&nfl=ap"
 
 type Article struct {
 	Title string
@@ -36,7 +37,7 @@ type Elements struct {
 
 type Result struct {
 	Title string
-	Url string
+	Url   string
 }
 
 type SearchResults struct {
@@ -52,7 +53,7 @@ var (
 )
 
 func InitSpider(name string, elements Elements) {
-	spider := Spider {
+	spider := Spider{
 		name,
 		"",
 		make([]Article, 0),
@@ -60,6 +61,7 @@ func InitSpider(name string, elements Elements) {
 		elements,
 		SearchResults{},
 	}
+	spider.Search.Url = DUMMY_URL
 	Crawler = &spider
 }
 
@@ -81,7 +83,7 @@ func (s Spider) Clone(name string, url string) *Spider {
 * article contents
 **/
 func (s *Spider) BuildAndStoreResultsLink(relativeUrl string, title string) {
-	result := Result {
+	result := Result{
 		title,
 		s.Html.BaseUrl + relativeUrl,
 	}
@@ -158,6 +160,17 @@ func (s *Spider) GetArticleLinks(endpoint string) {
 
 		})
 
+		// get previous button href
+		previous := e1.ChildAttr("li.previous a", "href")
+		if previous != "" {
+			s.BuildAndStoreResultsLink(previous, "Previous")
+		}
+
+		// get next previous button href
+		next := e1.ChildAttr("li.next a", "href")
+		if next != "" {
+			s.BuildAndStoreResultsLink(next, "Next")
+		}
 
 	})
 
@@ -168,7 +181,7 @@ func (s *Spider) GetArticleLinks(endpoint string) {
 	s.C.Visit(endpoint)
 }
 
-func (s Spider) ClearStoredArticleLinks() {
+func (s *Spider) ClearStoredArticleLinks() {
 	if len(s.Search.Results) != 0 {
 		s.Search.Results = []Result{}
 	}

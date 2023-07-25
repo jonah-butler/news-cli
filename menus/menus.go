@@ -23,21 +23,20 @@ func InitializePrompts() {
 	}
 
 	mainMenu.MenuOptions[i].Action()
-	
-}
 
+}
 
 func MainMenu() prompt.MenuLevel {
 
-	mainMenuOptions := prompt.MenuLevel {
+	mainMenuOptions := prompt.MenuLevel{
 		Prompt: "How would you like to begin?",
-		MenuOptions: []prompt.MenuOption {
-			 {
-				Text: "Get Latest Headlines",
+		MenuOptions: []prompt.MenuOption{
+			{
+				Text:   "Get Latest Headlines",
 				Action: prompt.GetLatestHeadlines,
 			},
 			{
-				Text: "Read Single Article",
+				Text:   "Read Single Article",
 				Action: prompt.ReadSingleArticle,
 			},
 		},

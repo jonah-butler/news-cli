@@ -12,12 +12,11 @@ import (
 )
 
 func GetLatestHeadlines() {
-	endpoint := "https://richmond.com/search/?nsa=eedition&app=editorial&d1=2023-07-17&d2=2023-07-18&s=start_time&sd=asc&l=25&t=article&nfl=ap"
-	spider.Crawler.GetArticleLinks(endpoint)
+	spider.Crawler.GetArticleLinks(spider.Crawler.Search.Url)
 
 	template := &promptui.SelectTemplates{
-		Label: "{{ . }}",
-		Active: "\U0001F4F0 {{ .Title | green }}",
+		Label:    "{{ . }}",
+		Active:   "\U0001F4F0 {{ .Title | green }}",
 		Inactive: "  {{ .Title | cyan }}",
 		Selected: "\U0001F4F0 {{ .Title | green }}",
 	}
@@ -30,12 +29,12 @@ func GetLatestHeadlines() {
 		return strings.Contains(name, input)
 	}
 
-	articlePrompt := promptui.Select {
-		Label: "Article Search",
-		Items: spider.Crawler.Search.Results,
+	articlePrompt := promptui.Select{
+		Label:     "Article Search",
+		Items:     spider.Crawler.Search.Results,
 		Templates: template,
-		Size: 10,
-		Searcher: searcher,
+		Size:      10,
+		Searcher:  searcher,
 	}
 
 	i, _, err := articlePrompt.Run()
@@ -44,9 +43,17 @@ func GetLatestHeadlines() {
 		fmt.Println("failed to initialize article prompt...", err)
 	}
 
-	clone := spider.Crawler.Clone("single article crawler...", spider.Crawler.Search.Results[i].Url)
+	selectedArticle := spider.Crawler.Search.Results[i]
 
-	clone.GetArticle(spider.Crawler.Search.Results[i].Url)
+	if selectedArticle.Title == "Next" || selectedArticle.Title == "Previous" {
+		spider.Crawler.Search.Url = selectedArticle.Url
+		// fetching new results - so clear the old ones
+		spider.Crawler.Search.Results = []spider.Result{}
+		GetLatestHeadlines()
+	} else {
+		clone := spider.Crawler.Clone("single article crawler...", spider.Crawler.Search.Results[i].Url)
+		clone.GetArticle(spider.Crawler.Search.Results[i].Url)
+	}
 
 }
 
@@ -60,7 +67,7 @@ func ReadSingleArticle() {
 	}
 
 	prompt := promptui.Prompt{
-		Label: "Enter Article URL",
+		Label:    "Enter Article URL",
 		Validate: validateInput,
 	}
 
@@ -71,5 +78,5 @@ func ReadSingleArticle() {
 	}
 
 	spider.Crawler.GetArticle(result)
-	
+
 }
