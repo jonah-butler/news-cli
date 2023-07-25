@@ -46,9 +46,8 @@ func GetLatestHeadlines() {
 	selectedArticle := spider.Crawler.Search.Results[i]
 
 	if selectedArticle.Title == "Next" || selectedArticle.Title == "Previous" {
+		spider.Crawler = spider.Crawler.Clone("news spider", selectedArticle.Url)
 		spider.Crawler.Search.Url = selectedArticle.Url
-		// fetching new results - so clear the old ones
-		spider.Crawler.Search.Results = []spider.Result{}
 		GetLatestHeadlines()
 	} else {
 		clone := spider.Crawler.Clone("single article crawler...", spider.Crawler.Search.Results[i].Url)

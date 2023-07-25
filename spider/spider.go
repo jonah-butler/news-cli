@@ -161,7 +161,7 @@ func (s *Spider) GetArticleLinks(endpoint string) {
 		})
 
 		// get previous button href
-		previous := e1.ChildAttr("li.previous a", "href")
+		previous := e1.ChildAttr("li.prev a", "href")
 		if previous != "" {
 			s.BuildAndStoreResultsLink(previous, "Previous")
 		}
