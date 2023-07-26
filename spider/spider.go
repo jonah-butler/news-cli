@@ -9,7 +9,7 @@ import (
 )
 
 const REQUEST_TIMEOUT = 120 * time.Second
-const DUMMY_URL = "https://richmond.com/search/?nsa=eedition&app=editorial&d1=2023-07-17&d2=2023-07-18&s=start_time&sd=asc&l=25&t=article&nfl=ap"
+const SEARCH_URL = "https://richmond.com/search/?nsa=eedition&app=editorial&s=start_time&sd=asc&l=25&t=article&nfl=ap"
 
 type Article struct {
 	Title string
@@ -61,7 +61,7 @@ func InitSpider(name string, elements Elements) {
 		elements,
 		SearchResults{},
 	}
-	spider.Search.Url = DUMMY_URL
+	spider.Search.Url = SEARCH_URL
 	Crawler = &spider
 }
 

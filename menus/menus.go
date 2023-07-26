@@ -22,7 +22,7 @@ func InitializePrompts() {
 		fmt.Printf("Prompt failed %v\n", err)
 	}
 
-	mainMenu.MenuOptions[i].Action()
+	mainMenu.MenuOptions[i].Action(prompt.InArticleMenu)
 
 }
 

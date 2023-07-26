@@ -7,5 +7,5 @@ type MenuLevel struct {
 
 type MenuOption struct {
 	Text   string
-	Action func()
+	Action func(c func())
 }
