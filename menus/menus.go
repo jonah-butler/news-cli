@@ -1,8 +1,10 @@
 package menus
 
 import (
+	"errors"
 	"fmt"
 	"go-scraper/prompt"
+	"go-scraper/spider"
 
 	"github.com/manifoldco/promptui"
 )
@@ -22,7 +24,7 @@ func InitializePrompts() {
 		fmt.Printf("Prompt failed %v\n", err)
 	}
 
-	mainMenu.MenuOptions[i].Action(prompt.InArticleMenu)
+	mainMenu.MenuOptions[i].Action(InArticleMenu)
 
 }
 
@@ -44,4 +46,35 @@ func MainMenu() prompt.MenuLevel {
 
 	return mainMenuOptions
 
+}
+
+func InArticleMenu() {
+	validateCommand := func(command string) error {
+		switch command {
+		case "back":
+			return nil
+		default:
+			return errors.New("not a valid command")
+		}
+	}
+
+	backPrompt := promptui.Prompt{
+		Label:    "[back]",
+		Validate: validateCommand,
+	}
+
+	result, err := backPrompt.Run()
+
+	if err != nil {
+		fmt.Println("Article Prompt failed")
+	}
+	
+	if result == "back" {
+		if spider.Crawler.Search.DateStart == "" {
+			InitializePrompts()
+		} else {
+			spider.Crawler = spider.Crawler.Clone("news spider", spider.Crawler.Search.Url)
+			prompt.GetLatestHeadlines(InArticleMenu)
+		}
+	}
 }

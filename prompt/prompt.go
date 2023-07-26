@@ -143,15 +143,13 @@ func InArticleMenu() {
 		switch command {
 		case "back":
 			return nil
-		case "save":
-			return nil
 		default:
 			return errors.New("not a valid command")
 		}
 	}
 
 	prompt := promptui.Prompt{
-		Label:    "[back] - [save]",
+		Label:    "[back]",
 		Validate: validateCommand,
 	}
 
@@ -160,5 +158,13 @@ func InArticleMenu() {
 	if err != nil {
 		fmt.Println("Article Prompt failed")
 	}
-	fmt.Println("result from InArticleMenu: ", result)
+	
+	if result == "back" {
+		if spider.Crawler.Search.DateStart == "" {
+			// menus.InitializePrompts()
+		} else {
+			spider.Crawler = spider.Crawler.Clone("news spider", spider.Crawler.Search.Url)
+			GetLatestHeadlines(InArticleMenu)
+		}
+	}
 }
