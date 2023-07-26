@@ -9,7 +9,7 @@ import (
 )
 
 const REQUEST_TIMEOUT = 120 * time.Second
-const SEARCH_URL = "https://richmond.com/search/?nsa=eedition&app=editorial&s=start_time&sd=asc&l=25&t=article&nfl=ap"
+const SEARCH_URL = "https://richmond.com/search/?nsa=eedition&app=editorial&s=start_time&sd=asc&l=2&t=article&nfl=ap"
 
 type Article struct {
 	Title string
@@ -139,6 +139,7 @@ func (s *Spider) GetArticle(endpoint string) {
 }
 
 func (s *Spider) GetArticleLinks(endpoint string) {
+
 	s.C.SetRequestTimeout(REQUEST_TIMEOUT)
 
 	s.C.OnRequest(func(r *colly.Request) {
@@ -146,12 +147,10 @@ func (s *Spider) GetArticleLinks(endpoint string) {
 	})
 
 	s.C.OnHTML(s.Html.ResultsContainer, func(e1 *colly.HTMLElement) {
-
 		// new search results - so clear old search result links
 		s.ClearStoredArticleLinks()
 
 		e1.ForEach(s.Html.ResultsLink, func(_ int, e2 *colly.HTMLElement) {
-
 			relativeUrl := e2.Attr("href")
 			title := e2.Attr("aria-label")
 			if title != "" {
@@ -177,8 +176,11 @@ func (s *Spider) GetArticleLinks(endpoint string) {
 	s.C.OnError(func(r *colly.Response, e error) {
 		fmt.Println("COLLY ERROR - endpoint: ", s.Search.Url, "\nERROR: ", e)
 	})
+	err := s.C.Visit(s.Search.Url)
 
-	s.C.Visit(endpoint)
+	if err != nil {
+		fmt.Println("ERROR RETURNED FROM VISIT: ", err)
+	}
 }
 
 func (s *Spider) ClearStoredArticleLinks() {

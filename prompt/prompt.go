@@ -13,8 +13,8 @@ import (
 )
 
 func GetDateRanges() {
+	layout := "2006-01-02"
 	d1 := func(date1 string) error {
-		layout := "2006-01-02"
 		_, err := time.Parse(layout, date1)
 		if err != nil {
 			return errors.New("date must be in format: 2006-02-01")
@@ -22,9 +22,12 @@ func GetDateRanges() {
 		return nil
 	}
 
-	date1Prompt := promptui.Prompt {
-		Label: "Enter start date",
+	today := time.Now().Format(layout)
+
+	date1Prompt := promptui.Prompt{
+		Label:    "Enter start date",
 		Validate: d1,
+		Default:  today,
 	}
 
 	result, err := date1Prompt.Run()
@@ -33,8 +36,7 @@ func GetDateRanges() {
 		fmt.Println("date 1 prompt failed")
 	}
 
-	spider.Crawler.Search.DateStart = "&d1="+result
-
+	spider.Crawler.Search.DateStart = "&d1=" + result
 
 	d2 := func(date1 string) error {
 		layout := "2006-01-02"
@@ -45,9 +47,10 @@ func GetDateRanges() {
 		return nil
 	}
 
-	date2Prompt := promptui.Prompt {
-		Label: "Enter end date",
+	date2Prompt := promptui.Prompt{
+		Label:    "Enter end date",
 		Validate: d2,
+		Default:  today,
 	}
 
 	result, err = date2Prompt.Run()
@@ -56,7 +59,7 @@ func GetDateRanges() {
 		fmt.Println("date 1 prompt failed")
 	}
 
-	spider.Crawler.Search.DateEnd = "&d2="+result
+	spider.Crawler.Search.DateEnd = "&d2=" + result
 
 	spider.Crawler.Search.Url += spider.Crawler.Search.DateStart + spider.Crawler.Search.DateEnd
 
@@ -102,14 +105,14 @@ func GetLatestHeadlines(c func()) {
 
 	if selectedArticle.Title == "Next" || selectedArticle.Title == "Previous" {
 		spider.Crawler = spider.Crawler.Clone("news spider", selectedArticle.Url)
+		spider.Crawler.C.AllowURLRevisit = true
 		spider.Crawler.Search.Url = selectedArticle.Url
 		GetLatestHeadlines(InArticleMenu)
 	} else {
-		clone := spider.Crawler.Clone("single article crawler...", spider.Crawler.Search.Results[i].Url)
-		clone.GetArticle(spider.Crawler.Search.Results[i].Url)
+		clone := spider.Crawler.Clone("single article crawler...", selectedArticle.Url)
+		clone.GetArticle(selectedArticle.Url)
+		c()
 	}
-
-	c()
 
 }
 
@@ -158,13 +161,15 @@ func InArticleMenu() {
 	if err != nil {
 		fmt.Println("Article Prompt failed")
 	}
-	
+
 	if result == "back" {
-		if spider.Crawler.Search.DateStart == "" {
-			// menus.InitializePrompts()
-		} else {
-			spider.Crawler = spider.Crawler.Clone("news spider", spider.Crawler.Search.Url)
-			GetLatestHeadlines(InArticleMenu)
-		}
+		spider.Crawler = spider.Crawler.Clone("news spider", spider.Crawler.Search.Url)
+		GetLatestHeadlines(InArticleMenu)
+		// if spider.Crawler.Search.DateStart == "" {
+		// 	menus.InitializePrompts()
+		// } else {
+		// 	spider.Crawler = spider.Crawler.Clone("news spider", spider.Crawler.Search.Url)
+		// 	GetLatestHeadlines(InArticleMenu)
+		// }
 	}
 }
