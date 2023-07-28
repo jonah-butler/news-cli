@@ -21,7 +21,7 @@ func LoadEnv() {
 
 func main() {
 
-	fmt.Println("testing pre-commit")
+	fmt.Println("testing pre-commit hook")
 
 	LoadEnv()
 
