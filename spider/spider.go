@@ -2,14 +2,16 @@ package spider
 
 import (
 	"fmt"
+	"net/url"
 	"strconv"
 	"time"
 
 	"github.com/gocolly/colly"
 )
 
+var SEARCH_URL string
+
 const REQUEST_TIMEOUT = 120 * time.Second
-const SEARCH_URL = "https://richmond.com/search/?nsa=eedition&app=editorial&s=start_time&sd=asc&l=2&t=article&nfl=ap"
 
 type Article struct {
 	Title string
@@ -46,6 +48,7 @@ type SearchResults struct {
 	DateEnd   string
 	Results   []Result
 	Limit     int
+	IsQuery   bool
 }
 
 var (
@@ -65,7 +68,7 @@ func InitSpider(name string, elements Elements) {
 	Crawler = &spider
 }
 
-func (s Spider) Clone(name string, url string) *Spider {
+func (s Spider) Clone(name string) *Spider {
 	spider := Spider{
 		name,
 		"",
@@ -75,6 +78,45 @@ func (s Spider) Clone(name string, url string) *Spider {
 		s.Search,
 	}
 	return &spider
+}
+
+func (s *Spider) ClearSetValues() {
+	s.Search.IsQuery = false
+	// eventually put these values in env
+	// to allow for dynamic usage
+	s.FlushQueryParam("q")
+	s.FlushQueryParam("d1")
+	s.FlushQueryParam("d2")
+	s.FlushQueryParam("o")
+	s.Search.DateEnd = ""
+	s.Search.DateStart = ""
+}
+
+func (s *Spider) FlushQueryParam(param string) {
+	u, err := url.Parse(s.Search.Url)
+	if err != nil {
+		fmt.Println("failed to parse query param in FlushQueryParam")
+	}
+
+	q := u.Query()
+	q.Del(param)
+	u.RawQuery = q.Encode()
+	s.Search.Url = u.String()
+}
+
+func (s *Spider) AppendQueryParam(query string) {
+	u, err := url.Parse(s.Search.Url)
+	if err != nil {
+		fmt.Println("failed to parse query param in AppendQueryParam")
+	}
+
+	vals := u.Query()
+
+	vals.Add("q", query)
+
+	u.RawQuery = vals.Encode()
+
+	s.Search.Url = s.Html.BaseUrl + "/search/?" + u.RawQuery
 }
 
 /**
@@ -170,6 +212,9 @@ func (s *Spider) GetArticleLinks(endpoint string) {
 		if next != "" {
 			s.BuildAndStoreResultsLink(next, "Next")
 		}
+
+		// add default option to go back to main menu
+		s.BuildAndStoreResultsLink("/", "Back To Main Menu")
 
 	})
 

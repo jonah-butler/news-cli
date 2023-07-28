@@ -66,8 +66,10 @@ func GetDateRanges() {
 }
 
 func GetLatestHeadlines(c func()) {
-	if spider.Crawler.Search.DateStart == "" || spider.Crawler.Search.DateEnd == "" {
-		GetDateRanges()
+	if !spider.Crawler.Search.IsQuery {
+		if spider.Crawler.Search.DateStart == "" || spider.Crawler.Search.DateEnd == "" {
+			GetDateRanges()
+		}
 	}
 
 	spider.Crawler.GetArticleLinks(spider.Crawler.Search.Url)
@@ -104,15 +106,46 @@ func GetLatestHeadlines(c func()) {
 	selectedArticle := spider.Crawler.Search.Results[i]
 
 	if selectedArticle.Title == "Next" || selectedArticle.Title == "Previous" {
-		spider.Crawler = spider.Crawler.Clone("news spider", selectedArticle.Url)
+		spider.Crawler = spider.Crawler.Clone("news spider")
 		spider.Crawler.C.AllowURLRevisit = true
 		spider.Crawler.Search.Url = selectedArticle.Url
 		GetLatestHeadlines(InArticleMenu)
+	} else if selectedArticle.Title == "Back To Main Menu" {
+		spider.Crawler = spider.Crawler.Clone("news spider")
+		spider.Crawler.C.AllowURLRevisit = true
+		spider.Crawler.ClearSetValues()
+		InitializePrompts()
 	} else {
-		clone := spider.Crawler.Clone("single article crawler...", selectedArticle.Url)
+		clone := spider.Crawler.Clone("single article crawler...")
 		clone.GetArticle(selectedArticle.Url)
 		c()
 	}
+
+}
+
+func RunSearchQuery(c func()) {
+	validateQuery := func(query string) error {
+		if query == "" {
+			return errors.New("query must not be empty")
+		}
+		return nil
+	}
+
+	prompt := promptui.Prompt{
+		Label:    "Enter a query to being your search",
+		Validate: validateQuery,
+	}
+
+	result, err := prompt.Run()
+
+	if err != nil {
+		fmt.Println("error initializing query prompt")
+	}
+
+	spider.Crawler = spider.Crawler.Clone("news spider")
+	spider.Crawler.AppendQueryParam(result)
+	spider.Crawler.Search.IsQuery = true
+	GetLatestHeadlines(InArticleMenu)
 
 }
 
@@ -163,13 +196,53 @@ func InArticleMenu() {
 	}
 
 	if result == "back" {
-		spider.Crawler = spider.Crawler.Clone("news spider", spider.Crawler.Search.Url)
+		spider.Crawler = spider.Crawler.Clone("news spider")
+		if !spider.Crawler.Search.IsQuery {
+			spider.Crawler.FlushQueryParam("q")
+		}
 		GetLatestHeadlines(InArticleMenu)
-		// if spider.Crawler.Search.DateStart == "" {
-		// 	menus.InitializePrompts()
-		// } else {
-		// 	spider.Crawler = spider.Crawler.Clone("news spider", spider.Crawler.Search.Url)
-		// 	GetLatestHeadlines(InArticleMenu)
-		// }
 	}
+}
+
+func MainMenu() MenuLevel {
+
+	mainMenuOptions := MenuLevel{
+		Prompt: "How would you like to begin?",
+		MenuOptions: []MenuOption{
+			{
+				Text:   "Get Latest Headlines",
+				Action: GetLatestHeadlines,
+			},
+			{
+				Text:   "Read Single Article",
+				Action: ReadSingleArticle,
+			},
+			{
+				Text:   "Search Articles",
+				Action: RunSearchQuery,
+			},
+		},
+	}
+
+	return mainMenuOptions
+
+}
+
+func InitializePrompts() {
+
+	mainMenu := MainMenu()
+
+	begin := promptui.Select{
+		Label: mainMenu.Prompt,
+		Items: ReduceMenuOption(mainMenu.MenuOptions),
+	}
+
+	i, _, err := begin.Run()
+
+	if err != nil {
+		fmt.Printf("Prompt failed %v\n", err)
+	}
+
+	mainMenu.MenuOptions[i].Action(InArticleMenu)
+
 }
