@@ -1,8 +1,6 @@
 package main
 
 import (
-	// "go-scraper/menus"
-	// "go-scraper/menus"
 	"go-scraper/prompt"
 	"go-scraper/spider"
 	"log"
