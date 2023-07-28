@@ -4,7 +4,7 @@ A simple Command Line utility for reading news results from the command line
 
 ## Pre-requisites
 
-The following env fields are requires to run
+The following env fields are required for the application to run
 
 - BASE\*URL: ex. "https://somenewsagency.com"
 
