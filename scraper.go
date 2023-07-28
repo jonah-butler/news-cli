@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"go-scraper/prompt"
 	"go-scraper/spider"
 	"log"
@@ -19,6 +20,8 @@ func LoadEnv() {
 }
 
 func main() {
+
+	fmt.Println("testing pre-commit hook")
 
 	LoadEnv()
 
