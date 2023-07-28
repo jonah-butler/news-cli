@@ -6,8 +6,8 @@ A simple Command Line utility for reading news results from the command line
 
 The following env fields are requires to run
 
-- BASE_URL: ex. "https://somenewsagency.com"
-  _The following syntax utilizes CSS selectors for interacting with various pages of the site_
+- BASE*URL: ex. "https://somenewsagency.com"\
+  \_The following syntax utilizes CSS selectors for interacting with various pages of the site*
 - SEARCH_URL: ex. "https://somenewsagency.com/search/?some=defaults&query=settings"
 - ARTICLE_BODY = "section#main-page-container"
 - ARTICLE_TITLE = "h1.headline span"
