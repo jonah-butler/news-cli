@@ -6,7 +6,7 @@ A simple Command Line utility for reading news results from the command line
 
 The following env fields are required for the application to run
 
-- BASE\*URL: ex. "https://somenewsagency.com"
+- BASE_URL: ex. "https://somenewsagency.com"
 
   _The following var syntax utilizes CSS selectors for interacting with various pages of the site_
 
