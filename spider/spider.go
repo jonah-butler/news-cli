@@ -1,6 +1,7 @@
 package spider
 
 import (
+	"errors"
 	"fmt"
 	"net/url"
 	"os"
@@ -13,6 +14,8 @@ import (
 var SEARCH_URL string
 
 const REQUEST_TIMEOUT = 120 * time.Second
+
+const SAVED_ARTICLES_DIR = "saved_files"
 
 type Article struct {
 	Title string
@@ -91,7 +94,15 @@ func(s *Spider) SaveToTextFile() {
 		title = strconv.FormatInt(time.Now().Unix(), 10)
 	}
 
-	f, err := os.Create(title+ ".txt")
+	// make directory if it does not exist
+	if _, err := os.Stat(SAVED_ARTICLES_DIR); errors.Is(err, os.ErrNotExist) {
+		err := os.Mkdir(SAVED_ARTICLES_DIR, os.ModePerm)
+		if err != nil {
+			fmt.Println("Failed to make directory: ", err)
+		}
+	}
+
+	f, err := os.Create(SAVED_ARTICLES_DIR + "/" + title + ".txt")
 	if err != nil {
 		fmt.Printf("Failed to save file: %s", title)
 	}
