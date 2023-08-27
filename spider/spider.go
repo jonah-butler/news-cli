@@ -3,6 +3,7 @@ package spider
 import (
 	"fmt"
 	"net/url"
+	"os"
 	"strconv"
 	"time"
 
@@ -22,7 +23,7 @@ type Article struct {
 type Spider struct {
 	Name      string
 	ActiveUrl string
-	Data      []Article
+	Data      *Article
 	C         *colly.Collector
 	Html      Elements
 	Search    SearchResults
@@ -59,7 +60,7 @@ func InitSpider(name string, elements Elements) {
 	spider := Spider{
 		name,
 		"",
-		make([]Article, 0),
+		&Article{},
 		colly.NewCollector(),
 		elements,
 		SearchResults{},
@@ -72,12 +73,39 @@ func (s Spider) Clone(name string) *Spider {
 	spider := Spider{
 		name,
 		"",
-		make([]Article, 0),
+		&Article{},
 		s.C.Clone(),
 		s.Html,
 		s.Search,
 	}
 	return &spider
+}
+
+func(s *Spider) SaveToTextFile() {
+	var title string
+	if s.Data.Title != "" {
+		title = s.Data.Title
+	} else {
+		// convert current unix timestamp to string for
+		// non-overlapping file titles
+		title = strconv.FormatInt(time.Now().Unix(), 10)
+	}
+
+	f, err := os.Create(title+ ".txt")
+	if err != nil {
+		fmt.Printf("Failed to save file: %s", title)
+	}
+
+	defer f.Close()
+
+	articleBody := fmt.Sprintf("%s\n\n\nurl: %s", s.Data.Body, s.Data.Url)
+
+	_, err = f.WriteString(articleBody)
+	if err != nil {
+		fmt.Printf("Failed to write article body to file: %s", title)
+	} else {
+		fmt.Printf("Write to file %s was successful", title + ".txt")
+	}
 }
 
 func (s *Spider) ClearSetValues() {
@@ -151,7 +179,6 @@ func (s *Spider) GetArticle(endpoint string) {
 	s.C.OnHTML(s.Html.ArticleBody, func(e1 *colly.HTMLElement) {
 
 		article := Article{}
-
 		article.Url = endpoint
 		article.Title = e1.ChildText(s.Html.ArticleTitle)
 
@@ -169,6 +196,8 @@ func (s *Spider) GetArticle(endpoint string) {
 		})
 
 		fmt.Println(article.Body)
+		
+		Crawler.Data = &article
 
 	})
 

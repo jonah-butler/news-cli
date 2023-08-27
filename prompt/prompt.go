@@ -179,13 +179,15 @@ func InArticleMenu() {
 		switch command {
 		case "back":
 			return nil
+		case "save":
+			return nil
 		default:
 			return errors.New("not a valid command")
 		}
 	}
 
 	prompt := promptui.Prompt{
-		Label:    "[back]",
+		Label:    "[back, save]",
 		Validate: validateCommand,
 	}
 
@@ -201,6 +203,9 @@ func InArticleMenu() {
 			spider.Crawler.FlushQueryParam("q")
 		}
 		GetLatestHeadlines(InArticleMenu)
+	} else if result == "save" {
+		spider.Crawler.SaveToTextFile()
+		InArticleMenu()
 	}
 }
 
