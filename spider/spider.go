@@ -224,10 +224,6 @@ func (s *Spider) GetArticleLinks(endpoint string) {
 
 	s.C.SetRequestTimeout(REQUEST_TIMEOUT)
 
-	s.C.OnRequest(func(r *colly.Request) {
-		fmt.Println("scraping results page: ", s.Search.Url)
-	})
-
 	s.C.OnHTML(s.Html.ResultsContainer, func(e1 *colly.HTMLElement) {
 		// new search results - so clear old search result links
 		s.ClearStoredArticleLinks()
