@@ -22,8 +22,6 @@ func main() {
 
 	LoadEnv()
 
-	// mail.SetupSMTPAuth()
-
 	htmlElements := spider.Elements{
 		// links on search page are relative, so need base URL
 		BaseUrl: os.Getenv("BASE_URL"),
