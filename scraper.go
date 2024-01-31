@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"go-scraper/prompt"
 	"go-scraper/spider"
 	"log"
@@ -21,9 +20,9 @@ func LoadEnv() {
 
 func main() {
 
-	fmt.Println("testing pre-commit hook with .env copy")
-
 	LoadEnv()
+
+	// mail.SetupSMTPAuth()
 
 	htmlElements := spider.Elements{
 		// links on search page are relative, so need base URL

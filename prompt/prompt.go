@@ -3,6 +3,7 @@ package prompt
 import (
 	"errors"
 	"fmt"
+	"go-scraper/mail"
 	"go-scraper/spider"
 	"strings"
 	"time"
@@ -11,6 +12,70 @@ import (
 
 	"github.com/manifoldco/promptui"
 )
+
+func SendEmail() {
+
+	mail.SetupSMTPAuth()
+
+	// get recipient address
+	v1 := func(emailAddress string) error {
+		if emailAddress == "" {
+			return errors.New("Email address can not be empty")
+		}
+		return nil
+	}
+
+	toPrompt := promptui.Prompt{
+		Label:    "Recipient address:",
+		Validate: v1,
+	}
+
+	recipient, err := toPrompt.Run()
+	if err != nil {
+		fmt.Printf("Failed to run recipient prompt: %s", err.Error())
+	}
+
+	// get email subject
+	v2 := func(subject string) error {
+		if subject == "" {
+			return errors.New("subject line can not be empty")
+		}
+		return nil
+	}
+
+	subjectPrompt := promptui.Prompt{
+		Label:    "Email Subject:",
+		Validate: v2,
+	}
+
+	subject, err := subjectPrompt.Run()
+	if err != nil {
+		fmt.Printf("Failed to run subject prompt: %s", err.Error())
+	}
+
+	// get additional body
+	v3 := func(body string) error {
+		return nil
+	}
+
+	bodyPrompt := promptui.Prompt{
+		Label:    "Enter additional body to email[optional]:",
+		Validate: v3,
+	}
+
+	body, err := bodyPrompt.Run()
+	if err != nil {
+		fmt.Printf("Failed to run additional body prompt: %s", err.Error())
+	}
+
+	err = mail.SendMail(body, recipient, subject, spider.Crawler.Data.Title, spider.Crawler.Data.Body)
+	if err != nil {
+		fmt.Printf("Error sending email to: %s - %s", recipient, err.Error())
+	}
+
+	InArticleMenu()
+
+}
 
 func GetDateRanges() {
 	layout := "2006-01-02"
@@ -181,13 +246,15 @@ func InArticleMenu() {
 			return nil
 		case "save":
 			return nil
+		case "email":
+			return nil
 		default:
 			return errors.New("not a valid command")
 		}
 	}
 
 	prompt := promptui.Prompt{
-		Label:    "[back, save]",
+		Label:    "[back, save, email]",
 		Validate: validateCommand,
 	}
 
@@ -206,6 +273,8 @@ func InArticleMenu() {
 	} else if result == "save" {
 		spider.Crawler.SaveToTextFile()
 		InArticleMenu()
+	} else if result == "email" {
+		SendEmail()
 	}
 }
 
