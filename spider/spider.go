@@ -69,7 +69,14 @@ func InitSpider(name string, elements Elements) {
 		SearchResults{},
 	}
 	spider.Search.Url = SEARCH_URL
+	spider.C.Limit(&colly.LimitRule{
+		DomainGlob:  "*",
+		Parallelism: 1,
+		Delay:       5 * time.Second,
+	})
 	Crawler = &spider
+
+	spider.C.UserAgent = "NewsPlz"
 }
 
 func (s Spider) Clone(name string) *Spider {
@@ -84,7 +91,7 @@ func (s Spider) Clone(name string) *Spider {
 	return &spider
 }
 
-func(s *Spider) SaveToTextFile() {
+func (s *Spider) SaveToTextFile() {
 	var title string
 	if s.Data.Title != "" {
 		title = s.Data.Title
@@ -115,7 +122,7 @@ func(s *Spider) SaveToTextFile() {
 	if err != nil {
 		fmt.Printf("Failed to write article body to file: %s", title)
 	} else {
-		fmt.Printf("Write to file %s was successful", title + ".txt")
+		fmt.Printf("Write to file %s was successful", title+".txt")
 	}
 }
 
@@ -207,7 +214,7 @@ func (s *Spider) GetArticle(endpoint string) {
 		})
 
 		fmt.Println(article.Body)
-		
+
 		Crawler.Data = &article
 
 	})
