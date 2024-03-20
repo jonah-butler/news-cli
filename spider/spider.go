@@ -72,7 +72,7 @@ func InitSpider(name string, elements Elements) {
 	spider.C.Limit(&colly.LimitRule{
 		DomainGlob:  "*",
 		Parallelism: 1,
-		Delay:       5 * time.Second,
+		Delay:       5 * time.Second, // randomize delay eventually
 	})
 	Crawler = &spider
 

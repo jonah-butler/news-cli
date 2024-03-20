@@ -9,8 +9,6 @@ import (
 	"github.com/joho/godotenv"
 )
 
-const REQUEST_TIMEOUT = 120
-
 func LoadEnv() {
 	err := godotenv.Load(".env")
 	if err != nil {
