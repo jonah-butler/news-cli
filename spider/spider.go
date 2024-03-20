@@ -3,6 +3,7 @@ package spider
 import (
 	"errors"
 	"fmt"
+	"go-scraper/helpers"
 	"net/url"
 	"os"
 	"strconv"
@@ -60,6 +61,9 @@ var (
 )
 
 func InitSpider(name string, elements Elements) {
+
+	delay := time.Duration(helpers.GetRandomNumberWithin(5)) * time.Second
+
 	spider := Spider{
 		name,
 		"",
@@ -72,11 +76,11 @@ func InitSpider(name string, elements Elements) {
 	spider.C.Limit(&colly.LimitRule{
 		DomainGlob:  "*",
 		Parallelism: 1,
-		Delay:       5 * time.Second, // randomize delay eventually
+		Delay:       delay,
 	})
 	Crawler = &spider
 
-	spider.C.UserAgent = "NewsPlz"
+	spider.C.UserAgent = "213dsf2342!@#!23sdf!@#%@"
 }
 
 func (s Spider) Clone(name string) *Spider {

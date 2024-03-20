@@ -1,6 +1,7 @@
 package main
 
 import (
+	"go-scraper/helpers"
 	"go-scraper/prompt"
 	"go-scraper/spider"
 	"log"
@@ -19,6 +20,8 @@ func LoadEnv() {
 func main() {
 
 	LoadEnv()
+
+	helpers.InitRandSource()
 
 	htmlElements := spider.Elements{
 		// links on search page are relative, so need base URL
