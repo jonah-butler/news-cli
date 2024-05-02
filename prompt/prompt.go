@@ -21,7 +21,7 @@ func SendEmail() {
 	// get recipient address
 	v1 := func(emailAddress string) error {
 		if emailAddress == "" {
-			return errors.New("Email address can not be empty")
+			return errors.New("email address can not be empty")
 		}
 		return nil
 	}
