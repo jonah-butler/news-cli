@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"go-scraper/mail"
 	"go-scraper/spider"
+	"os"
 	"strings"
 	"time"
 
@@ -214,6 +215,10 @@ func RunSearchQuery(c func()) {
 
 }
 
+func ExitApplication(c func()) {
+	os.Exit(0)
+}
+
 func ReadSingleArticle(c func()) {
 	validateInput := func(articleUrl string) error {
 		_, err := url.ParseRequestURI(articleUrl)
@@ -248,13 +253,15 @@ func InArticleMenu() {
 			return nil
 		case "email":
 			return nil
+		case "exit":
+			return nil
 		default:
 			return errors.New("not a valid command")
 		}
 	}
 
 	prompt := promptui.Prompt{
-		Label:    "[back, save, email]",
+		Label:    "[back, save, email, exit]",
 		Validate: validateCommand,
 	}
 
@@ -275,6 +282,8 @@ func InArticleMenu() {
 		InArticleMenu()
 	} else if result == "email" {
 		SendEmail()
+	} else if result == "exit" {
+		os.Exit(0)
 	}
 }
 
@@ -294,6 +303,10 @@ func MainMenu() MenuLevel {
 			{
 				Text:   "Search Articles",
 				Action: RunSearchQuery,
+			},
+			{
+				Text:   "Exit CLI",
+				Action: ExitApplication,
 			},
 		},
 	}
