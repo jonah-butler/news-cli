@@ -6,12 +6,21 @@ import (
 	"go-scraper/spider"
 	"log"
 	"os"
+	"path/filepath"
 
 	"github.com/joho/godotenv"
 )
 
 func LoadEnv() {
-	err := godotenv.Load(".env")
+	exePath, err := os.Executable()
+	if err != nil {
+		log.Fatal("could not determine executable path:", err)
+	}
+	exeDir := filepath.Dir(exePath)
+
+	envPath := filepath.Join(exeDir, ".env")
+
+	err = godotenv.Load(envPath)
 	if err != nil {
 		log.Fatalf("failed to load env file - can't run scraper without html declarations")
 	}
