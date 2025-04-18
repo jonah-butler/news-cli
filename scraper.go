@@ -1,6 +1,8 @@
 package main
 
 import (
+	"flag"
+	"fmt"
 	"go-scraper/helpers"
 	"go-scraper/prompt"
 	"go-scraper/spider"
@@ -12,17 +14,31 @@ import (
 )
 
 func LoadEnv() {
-	exePath, err := os.Executable()
-	if err != nil {
-		log.Fatal("could not determine executable path:", err)
-	}
-	exeDir := filepath.Dir(exePath)
+	// set default env
+	mode := flag.String("env", "dev", "Defines the application state: (prod/dev)")
+	flag.Parse()
 
-	envPath := filepath.Join(exeDir, ".env")
+	if *mode == "dev" {
+		err := godotenv.Load(".env")
+		if err != nil {
+			log.Fatalf("Failed to load env in dev environment: %s", err)
+		}
+	} else if *mode == "prod" {
+		exePath, err := os.Executable()
+		if err != nil {
+			log.Fatal("could not determine executable path:", err)
+		}
+		exeDir := filepath.Dir(exePath)
 
-	err = godotenv.Load(envPath)
-	if err != nil {
-		log.Fatalf("failed to load env file - can't run scraper without html declarations")
+		fmt.Println(exeDir)
+		envPath := filepath.Join(exeDir, ".env")
+
+		err = godotenv.Load(envPath)
+		if err != nil {
+			log.Fatalf("Failed to load env in prod environment: %s", err)
+		}
+	} else {
+		log.Fatalf("Invalid environment flag: <prod> or <dev> allowed")
 	}
 }
 
