@@ -183,6 +183,7 @@ func GetLatestHeadlines(c func()) {
 		InitializePrompts()
 	} else {
 		clone := spider.Crawler.Clone("single article crawler...")
+		spider.Crawler.C.AllowURLRevisit = true
 		clone.GetArticle(selectedArticle.Url)
 		c()
 	}
